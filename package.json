@@ -1,4 +1,12 @@
 {
+  "name": "parex-engenharia",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "echo \"No build step for now\"",
+    "dev": "nodemon server.js" 
+  },
   "dependencies": {
     "bcrypt": "5.1.1",
     "body-parser": "1.20.3",
@@ -9,16 +17,11 @@
     "mongodb": "6.12.0",
     "mongoose": "8.9.3"
   },
-  "name": "parex-engenharia",
-  "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+  "devDependencies": {
+    "nodemon": "^2.0.22" 
   },
   "author": "",
   "license": "ISC",
   "keywords": [],
-  "devDependencies": {},
   "description": ""
 }
