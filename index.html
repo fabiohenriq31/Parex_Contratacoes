@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Contratações</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background-color: #f4f4f9;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      color: #1e90ff;
+      margin-bottom: 20px;
+    }
+
+    .form-container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+      margin-bottom: 20px;
+    }
+
+    .form-container input,
+    .form-container select,
+    .form-container button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+
+    .form-container button {
+      background-color: #1e90ff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .form-container button:hover {
+      background-color: #007acc;
+    }
+
+    table {
+      width: 100%;
+      max-width: 800px;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    table thead {
+      background-color: #1e90ff;
+      color: white;
+    }
+
+    table th, table td {
+      text-align: left;
+      padding: 12px;
+    }
+
+    table tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    table tr:hover {
+      background-color: #f1f1f1;
+    }
+
+    #tabelaFuncionarios {
+      display: none;
+    }
+
+    .alert {
+      color: red;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Gestão de Contratações</h1>
+
+  <div class="form-container" id="loginForm">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Usuário" />
+    <input type="password" id="password" placeholder="Senha" />
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div class="form-container" id="funcionarioForm" style="display: none;">
+    <h2>Adicionar Funcionário</h2>
+    <input type="text" id="nome" placeholder="Nome do Funcionário" />
+    <select id="status">
+      <option value="Aguardando ligação">Aguardando ligação</option>
+      <option value="Tentativa de ligação não aceita 1">Tentativa de ligação não aceita 1</option>
+      <option value="Tentativa de ligação não aceita 2">Tentativa de ligação não aceita 2</option>
+      <option value="Tentativa de ligação não aceita 3">Tentativa de ligação não aceita 3</option>
+      <option value="Não atendido">Não atendido</option>
+      <option value="Aguardando documentação">Aguardando documentação</option>
+      <option value="Documentação recebida">Documentação recebida</option>
+      <option value="Aguardando verificação BancoDoc">Aguardando verificação BancoDoc</option>
+      <option value="Aguardando chegada">Aguardando chegada</option>
+      <option value="Realizando Exame">Realizando Exame</option>
+      <option value="Aguardando ASO">Aguardando ASO</option>
+      <option value="ASO Liberado">ASO Liberado</option>
+      <option value="ASO recusado">ASO recusado</option>
+      <option value="PIT">PIT</option>
+      <option value="Reprovado PIT">Reprovado PIT</option>
+      <option value="Aprovado PIT">Aprovado PIT</option>
+      <option value="Aprovado Aguardando Crachá">Aprovado Aguardando Crachá</option>
+      <option value="Crachá liberado">Crachá liberado</option>
+    </select>
+    <input type="date" id="dataLiberacao" />
+    <button onclick="adicionarFuncionario()">Adicionar Funcionário</button>
+  </div>
+
+  <table id="tabelaFuncionarios">
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>Status</th>
+        <th>Data de Previsão de Liberação</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+  
+
+  <script>
+    let token = '';
+
+async function login() {
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+
+  const response = await fetch('http://localhost:5000/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  });
+
+  if (response.ok) {
+    const data = await response.json();
+    token = data.token;
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('funcionarioForm').style.display = 'block';
+    document.getElementById('tabelaFuncionarios').style.display = 'table';
+    carregarFuncionarios();
+  } else {
+    alert('Login falhou. Verifique suas credenciais.');
+  }
+}
+
+async function carregarFuncionarios() {
+  const response = await fetch('http://localhost:5000/funcionarios', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (response.ok) {
+    const funcionarios = await response.json();
+    const tabela = document.getElementById('tabelaFuncionarios').querySelector('tbody');
+    tabela.innerHTML = '';
+
+    funcionarios.forEach(funcionario => {
+      const linha = document.createElement('tr');
+      linha.innerHTML = `
+        <td>${funcionario.nome}</td>
+        <td>${funcionario.status}</td>
+        <td>${funcionario.dataLiberacao}</td>
+        <td>
+          <button onclick="editarFuncionario('${funcionario._id}')">Editar</button>
+          <button onclick="deletarFuncionario('${funcionario._id}')">Deletar</button>
+        </td>
+      `;
+      tabela.appendChild(linha);
+    });
+  } else {
+    alert('Erro ao carregar funcionários.');
+  }
+}
+
+
+
+async function adicionarFuncionario() {
+  const nome = document.getElementById('nome').value;
+  const status = document.getElementById('status').value;
+  const dataLiberacao = document.getElementById('dataLiberacao').value;
+
+  if (!nome || !dataLiberacao) {
+    alert('Por favor, preencha todos os campos.');
+    return;
+  }
+
+  const response = await fetch('http://localhost:5000/funcionarios', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ nome, status, dataLiberacao }),
+  });
+
+  if (response.ok) {
+    alert('Funcionário adicionado com sucesso!');
+    carregarFuncionarios();
+    document.getElementById('nome').value = '';
+    document.getElementById('status').value = 'Aguardando ligação';
+    document.getElementById('dataLiberacao').value = '';
+  } else {
+    alert('Erro ao adicionar funcionário.');
+  }
+}
+async function deletarFuncionario(id) {
+  const confirmacao = confirm('Tem certeza de que deseja deletar este funcionário?');
+  if (!confirmacao) return;
+
+  const response = await fetch(`http://localhost:5000/funcionarios/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (response.ok) {
+    alert('Funcionário deletado com sucesso!');
+    carregarFuncionarios();
+  } else {
+    alert('Erro ao deletar funcionário.');
+  }
+}
+
+async function editarFuncionario(id) {
+  const novoStatus = prompt('Digite o novo status:', 'Aguardando ligação');
+  if (!novoStatus) {
+    alert('O status não pode ser vazio.');
+    return;
+  }
+
+  const novaData = prompt('Digite a nova data de previsão de liberação (formato YYYY-MM-DD):', '');
+  if (!novaData || isNaN(Date.parse(novaData))) {
+    alert('A data é inválida.');
+    return;
+  }
+
+  const response = await fetch(`http://localhost:5000/funcionarios/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ status: novoStatus, dataLiberacao: novaData }),
+  });
+
+  if (response.ok) {
+    alert('Funcionário atualizado com sucesso!');
+    carregarFuncionarios();
+  } else {
+    alert('Erro ao atualizar funcionário.');
+  }
+}
+
+  </script>
+</body>
+</html>

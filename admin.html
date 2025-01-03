@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Cadastrar Usuários</title>
+</head>
+<body>
+  <h1>Página de Administração</h1>
+  <form id="formCadastro">
+    <label for="username">Nome de Usuário:</label>
+    <input type="text" id="username" required>
+    <br>
+    <label for="password">Senha:</label>
+    <input type="password" id="password" required>
+    <br>
+    <button type="submit">Cadastrar Usuário</button>
+  </form>
+
+  <script>
+    const token = localStorage.getItem('token'); 
+
+    document.getElementById('formCadastro').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const response = await fetch('http://localhost:5000/usuarios', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ username, password }),
+        });
+
+        if (response.ok) {
+          alert('Usuário cadastrado com sucesso!');
+        } else {
+          const error = await response.json();
+          alert(`Erro: ${error.message}`);
+        }
+      } catch (error) {
+        alert('Erro ao se conectar ao servidor.');
+      }
+    });
+  </script>
+</body>
+</html>
